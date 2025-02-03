@@ -33,7 +33,7 @@ public class FilterList<E> extends AbstractList<E> implements List<E>, Serializa
     }
 
     public Iterator<E> iterator() {
-        return new FilterItr(objects.iterator());
+        return new FilterListItr();
     }
 
     public Object[] toArray() {
@@ -133,56 +133,6 @@ public class FilterList<E> extends AbstractList<E> implements List<E>, Serializa
         return objects.subList(fromIndex, toIndex);
     }
 
-    private class FilterItr implements Iterator<E> {
-        private final Iterator<E> iterator;
-        private E nextElement;
-        private boolean hasNextComputed = false;
-        private boolean canRemove = false;
-
-        public FilterItr(Iterator<E> iterator) {
-            this.iterator = iterator;
-        }
-
-        private void findNext() {
-            while (iterator.hasNext()) {
-                E element = iterator.next();
-                if (!predicate.contains(element)) {
-                    nextElement = element;
-                    hasNextComputed = true;
-                    return;
-                }
-            }
-            hasNextComputed = true;
-            nextElement = null;
-        }
-
-        @Override
-        public boolean hasNext() {
-            if (!hasNextComputed) {
-                findNext();
-            }
-            return nextElement != null;
-        }
-
-        @Override
-        public E next() {
-            if (!hasNext()) {
-                throw new NoSuchElementException();
-            }
-            hasNextComputed = false;
-            canRemove = true;
-            return nextElement;
-        }
-
-        @Override
-        public void remove() {
-            if (!canRemove) {
-                throw new IllegalStateException("Cannot remove element before calling next()");
-            }
-            iterator.remove();
-            canRemove = false; //Запрещаем повторный вызов remove()
-        }
-    }
 
     private class FilterListItr implements ListIterator<E> {
         private int cursor;

@@ -1,19 +1,30 @@
 package com.rntgroup.filterlist;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.AbstractList;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Set;
 
 
-public class FilterList<E> extends AbstractList<E> implements List<E>, Serializable {
+public class FilterList<E extends Serializable> extends AbstractList<E> implements List<E>, Serializable {
 
     private static final long serialVersionUID = 1L;
     private final List<E> objects = new ArrayList<>();
     private final Set<E> predicate;
 
+    private String NULL_PARAM = "Param is null";
+    private String NULL_COLLECTION = "Collection is null";
+
 
     public FilterList(Collection<E> objects, Collection<E> predicate) {
-        if (objects == null || predicate == null)
-            throw new NullPointerException("Objects or predicate are null");
+        Objects.requireNonNull(objects, "Objects are null");
+        Objects.requireNonNull(predicate, "Predicate are null");
 
         this.objects.addAll(objects);
         this.predicate = Set.copyOf(predicate); //immutable
@@ -28,7 +39,7 @@ public class FilterList<E> extends AbstractList<E> implements List<E>, Serializa
     }
 
     public boolean contains(Object o) {
-        Objects.requireNonNull(o, "Param is null");
+        Objects.requireNonNull(o, NULL_PARAM);
         return this.objects.contains(o);
     }
 
@@ -41,29 +52,29 @@ public class FilterList<E> extends AbstractList<E> implements List<E>, Serializa
     }
 
     public boolean add(E e) {
-        Objects.requireNonNull(e, "Param is null");
+        Objects.requireNonNull(e, NULL_PARAM);
         return !predicate.contains(e) ? objects.add(e) : false;
     }
 
     public boolean remove(Object o) {
-        Objects.requireNonNull(o, "Param is null");
+        Objects.requireNonNull(o, NULL_PARAM);
         return !predicate.contains(o) ? objects.remove(o) : false;
     }
 
     public boolean containsAll(Collection<?> c) {
-        Objects.requireNonNull(c, "Collection is null");
+        Objects.requireNonNull(c, NULL_COLLECTION);
         if (objects.size() < c.size())
             return false;
         return objects.containsAll(c);
     }
 
     public boolean addAll(Collection<? extends E> c) {
-        Objects.requireNonNull(c, "Collection is null");
+        Objects.requireNonNull(c, NULL_COLLECTION);
         return this.addAll(objects.size() - 1, c);
     }
 
     public boolean addAll(int index, Collection<? extends E> c) {
-        Objects.requireNonNull(c, "Collection is null");
+        Objects.requireNonNull(c, NULL_COLLECTION);
         Objects.checkIndex(index, objects.size());
 
         boolean wasAdded = false;
@@ -77,7 +88,7 @@ public class FilterList<E> extends AbstractList<E> implements List<E>, Serializa
     }
 
     public boolean removeAll(Collection<?> c) {
-        Objects.requireNonNull(c, "Collection is null");
+        Objects.requireNonNull(c, NULL_COLLECTION);
         return objects.removeIf(object -> c.contains(object) && !predicate.contains(object));
     }
 
@@ -91,14 +102,14 @@ public class FilterList<E> extends AbstractList<E> implements List<E>, Serializa
     }
 
     public E set(int index, E element) {
-        Objects.requireNonNull(element, "Param is null");
+        Objects.requireNonNull(element, NULL_PARAM);
         Objects.checkIndex(index, objects.size());
 
         return objects.set(index, element);
     }
 
     public void add(int index, E element) {
-        Objects.requireNonNull(element, "Param is null");
+        Objects.requireNonNull(element, NULL_PARAM);
         Objects.checkIndex(index, objects.size());
 
         if (!predicate.contains(element))
@@ -111,12 +122,12 @@ public class FilterList<E> extends AbstractList<E> implements List<E>, Serializa
     }
 
     public int indexOf(Object o) {
-        Objects.requireNonNull(o, "Param is null");
+        Objects.requireNonNull(o, NULL_PARAM);
         return objects.indexOf(o);
     }
 
     public int lastIndexOf(Object o) {
-        Objects.requireNonNull(o, "Param is null");
+        Objects.requireNonNull(o, NULL_PARAM);
         return objects.lastIndexOf(o);
     }
 
@@ -250,4 +261,17 @@ public class FilterList<E> extends AbstractList<E> implements List<E>, Serializa
         }
     }
 
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (Objects.isNull(object) || getClass() != object.getClass()) return false;
+        if (!super.equals(object)) return false;
+        FilterList<?> that = (FilterList<?>) object;
+        return Objects.equals(objects, that.objects) && Objects.equals(predicate, that.predicate);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), objects, predicate);
+    }
 }
